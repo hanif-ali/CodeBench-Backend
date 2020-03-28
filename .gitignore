@@ -1,0 +1,15 @@
+# Virtual Environment Files
+env/
+
+# Vim Generated Swap Files
+*.sw?
+
+# VSCODE configs
+.vscode/
+
+# Python Generated Files
+*.pyc
+*/**/__pycache__
+
+# SQLite Database
+*.sqlite3
