@@ -1,24 +1,15 @@
 # Code Bench Backend Repository 
-Click the Fork Button at the Top. You will have your version of this repository at `your-username/CodeBench-Backend`
-
-Make sure you have Git Installed. 
-
-To clone the forked repository in your PC, go to your command line and run 
+I have you as collaborators to this repository. 
+To clone the it to your PC, go to your command line and run 
 ```
 git clone https://github.com/your-username/CodeBench-Backend
 ```
+Replace the `your-username` with your own.
 
-Go to the CodeBench-Backend folder with `cd CodeBench-Backend`
-Now run 
+When adding something to the code, you will create a new branch and do all your work in that branch.
+You can create a new branch by running `git branch new-branch-name`. For example,
 ```
-git remote add upstream https://github.com/hanif-ali/CodeBench-Backend
-```
-This will later allow you to update your code with changes in mine.
-
-When adding something to the code, create a new branch and do all your work in that branch.
-You can create a new branch with `git branch new-branch-name`. For example,
-```
-git branch login-and-registration 
+git branch login-page-branch
 ```
 To move to the new branch, run 
 ```
@@ -26,16 +17,15 @@ git checkout new-branch-name
 ```
 You can check which branch you are on with `git branch`
 
- Do all your work in the new branch and keep commiting your changes.
+Do all your work in the new branch and keep commiting your changes.
 
- To upload your new branch to your remote repository run,
+To upload your new branch to this remote repository run,
 ``` 
 git push origin new-branch-name
 ```
+Push only to the branch that you created. Don't push to the `master` branch.
 
- Go to your Github Repository in your browser (https://github.com/your-username/CodeBench-Backend) and go to "Create a Pull Request" so that I can review and merge your changes with mine.
-
-Whenever updating your code with changes in my code, run 
+Whenever updating your branch with other's changes in the branch, run 
 ```
-git pull upstream
+git pull origin branch-name
 ```
