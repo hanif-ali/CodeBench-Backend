@@ -10,6 +10,9 @@ from flask_jwt_extended import (
     get_jwt_identity
 )
 
+# Helper Function
+from utils import get_user
+
 
 app = Flask(__name__)
 app.config['SECRET_KEY']='thisissecretkey'
@@ -23,12 +26,17 @@ db.init_app(app)
 # JWT for Authentication
 jwt = JWTManager(app)
 
- 
-@app.route("/test", methods=["GET", "POST"])
-def test():
-    js = request.get_json()
-    print(request)
-    return js.get("name")
+
+@app.route("/test")
+@jwt_required
+def test_login_identity():
+    """Test View to check login identity"""
+
+    login_details = get_jwt_identity()
+    user = get_user(login_details["mode"], login_details["id"])
+    response = "You are logged in {} mode as {}".format(login_details["mode"].upper(),
+                                                user.first_name)
+    return response
 
 
 @app.route("/login", methods=['POST'])
@@ -72,7 +80,6 @@ def login():
         return jsonify(status="success", access_token=access_token)
     else:
         return jsonify(status="denied", description="Password Invalid")
-
 
 
 
