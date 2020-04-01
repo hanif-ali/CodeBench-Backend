@@ -27,7 +27,7 @@ class Student(db.Model):
     first_name = db.Column(db.String(50))
     last_name = db.Column(db.String(50))
     cms_id = db.Column(db.Integer, unique=True)
-    email = db.Column(db.String(50))
+    email = db.Column(db.String(50), unique=True)
     password = db.Column(db.String(50))
 
     # Foreign Key Relationships
@@ -52,7 +52,7 @@ class Administrator(db.Model):
     __tablename__ = "administrators"
 
     id = db.Column(db.Integer,primary_key=True,nullable=False)
-    email = db.Column(db.String(50))
+    email = db.Column(db.String(50), unique=True)
     first_name = db.Column(db.String(50))
     last_name = db.Column(db.String(50))
     password = db.Column(db.String(50))
@@ -61,7 +61,7 @@ class Administrator(db.Model):
         self.first_name = first_name
         self.last_name = last_name
         self.email = email
-        self.password = password
+        self.password = generate_password_hash(password)
 
     def check_password(self, password):
         return check_password_hash(self.password, password)
