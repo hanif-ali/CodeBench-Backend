@@ -11,7 +11,7 @@ from flask_jwt_extended import (
 )
 
 # Helper Function
-from utils import get_user
+from utils import get_user, admin_required, student_required
 
 
 app = Flask(__name__)
@@ -80,7 +80,6 @@ def login():
         return jsonify(status="success", access_token=access_token)
     else:
         return jsonify(status="denied", description="Password Invalid")
-
 
 
 if __name__=="__main__":
