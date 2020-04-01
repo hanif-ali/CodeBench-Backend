@@ -24,7 +24,8 @@ class Student(db.Model):
 
     # Normal Data Fields
     id = db.Column(db.Integer,primary_key=True,nullable=False)
-    name = db.Column(db.String(50))
+    first_name = db.Column(db.String(50))
+    last_name = db.Column(db.String(50))
     cms_id = db.Column(db.Integer, unique=True)
     email = db.Column(db.String(50))
     password = db.Column(db.String(50))
@@ -33,13 +34,13 @@ class Student(db.Model):
     group_id = db.Column(db.Integer, db.ForeignKey('groups.id'))
     group = db.relationship("Group", backref="students")
 
-    def __init__(self,name,cms_id,email,password,course,id):
-        self.id = id
-        self.name = name
-        self.course = course
+    def __init__(self, first_name, last_name, cms_id, email, password, group):
+        self.first_name = first_name
+        self.last_name = last_name
         self.cms_id = cms_id
         self.email = email
         self.password = generate_password_hash(password)
+        self.group = group
     
     def check_password(self, password):
         return check_password_hash(self.password, password)
@@ -56,10 +57,10 @@ class Administrator(db.Model):
     last_name = db.Column(db.String(50))
     password = db.Column(db.String(50))
 
-    def __init__(self, email, first_name, last_name, password):
-        self.email = email
+    def __init__(self, first_name, last_name, email, password):
         self.first_name = first_name
         self.last_name = last_name
+        self.email = email
         self.password = password
 
     def check_password(self, password):
@@ -81,7 +82,7 @@ class Group(db.Model):
 
     def __init__(self, name, administrator):
         self.name = name 
-        self.administator = adminisrtator
+        self.administrator = administrator
 
 
 class Assignment(db.Model):
@@ -114,5 +115,9 @@ class Submission(db.Model):
     student_id = db.Column(db.Integer, db.ForeignKey("students.id"))
     student = db.relationship("Student", backref="submissions")
 
-    def __init__(self, student, submission_time):
+    assignment_id = db.Column(db.Integer, db.ForeignKey("assignments.id"))
+    assignment = db.relationship("Assignment", backref="submissions")
+
+    def __init__(self, student, assignment):
         self.student = student
+        self.assignment = assignment
