@@ -12,4 +12,4 @@ env/
 */**/__pycache__
 
 # SQLite Database
-*.sqlite3
+*.db
