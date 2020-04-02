@@ -77,6 +77,27 @@ def login():
         return jsonify(status="denied", description="Password Invalid")
 
 
+@app.route("/student/details")
+@jwt_required
+@student_required
+def student_details():
+    """Returns the details of the currently logged in  Student"""
+
+    jwt_data = get_jwt_identity()
+    student = get_user(jwt_data)
+    return student_schema.dumps(student)
+
+
+@app.route("/admin/details")
+@jwt_required
+@admin_required
+def admin_details():
+    """Returns the details of the currently logged in  Admin"""
+
+    jwt_data = get_jwt_identity()
+    admin = get_user(jwt_data)
+    return admin_schema.dumps(admin)
+
 
 if __name__=="__main__":
     app.run()

@@ -10,6 +10,7 @@ class StudentSchema(ma.Schema):
         # Fields to expose
         fields = ("first_name", "last_name", "cms_id", "email") # Left group, password
 
+
 student_schema = StudentSchema()
 students_schema = StudentSchema(many=True)
 

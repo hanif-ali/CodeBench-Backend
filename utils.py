@@ -4,9 +4,12 @@ from flask import jsonify
 from flask_jwt_extended import get_jwt_identity
 from models import Student, Administrator, Group, Assignment, Submission
 
-def get_user(mode, id):
+def get_user(jwt_data):
     """Returns the appropriate Student/Administrator record according to mode""" 
 
+    mode = jwt_data["mode"]
+    id = jwt_data["id"]
+    
     if mode=="admin":
         user = Administrator.query.get(id)
     elif mode=="student":
