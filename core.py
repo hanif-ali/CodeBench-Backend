@@ -13,12 +13,15 @@ from flask_jwt_extended import (
 from serializers import serializers_bp, student_schema, students_schema, admin_schema, admins_schema
 # Helper Function
 from utils import get_user, admin_required, student_required
+from test_routes import bp as test_routes_bp
 
 
 app = Flask(__name__)
 # Register Blueprints
 app.register_blueprint(serializers_bp)
+app.register_blueprint(test_routes_bp)
 
+# App configs
 app.config['SECRET_KEY']='thisissecretkey'
 app.debug = True  # True only for development
 
@@ -29,22 +32,6 @@ db.init_app(app)
 
 # JWT for Authentication
 jwt = JWTManager(app)
-
-@app.route("/users")
-def students():
-    all_users = Student.query.all()
-    return jsonify(students_schema.dump(all_users))
-
-@app.route("/test")
-@jwt_required
-def test_login_identity():
-    """Test View to check login identity"""
-
-    login_details = get_jwt_identity()
-    user = get_user(login_details["mode"], login_details["id"])
-    response = "You are logged in {} mode as {}".format(login_details["mode"].upper(),
-                                                user.first_name)
-    return response
 
 
 @app.route("/login", methods=['POST'])
