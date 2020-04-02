@@ -10,11 +10,15 @@ from flask_jwt_extended import (
     get_jwt_identity
 )
 
+from serializers import serializers_bp, student_schema, students_schema, admin_schema, admins_schema
 # Helper Function
 from utils import get_user, admin_required, student_required
 
 
 app = Flask(__name__)
+# Register Blueprints
+app.register_blueprint(serializers_bp)
+
 app.config['SECRET_KEY']='thisissecretkey'
 app.debug = True  # True only for development
 
@@ -26,6 +30,10 @@ db.init_app(app)
 # JWT for Authentication
 jwt = JWTManager(app)
 
+@app.route("/users")
+def students():
+    all_users = Student.query.all()
+    return jsonify(students_schema.dump(all_users))
 
 @app.route("/test")
 @jwt_required
@@ -80,6 +88,7 @@ def login():
         return jsonify(status="success", access_token=access_token)
     else:
         return jsonify(status="denied", description="Password Invalid")
+
 
 
 if __name__=="__main__":
