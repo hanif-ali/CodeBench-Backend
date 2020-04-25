@@ -10,7 +10,7 @@ from flask_jwt_extended import (
     get_jwt_identity
 )
 
-from serializers import serializers_bp, student_schema, students_schema, admin_schema, admins_schema
+from serializers import serializers_bp, student_schema, students_schema, admin_schema, admins_schema,assisngment_schema,assignments_schema,group_schema,groups_schema,submissions_schema,submission_schema,SubmissionSchema
 # Helper Function
 from utils import get_user, admin_required, student_required
 from test_routes import bp as test_routes_bp
@@ -97,6 +97,61 @@ def admin_details():
     jwt_data = get_jwt_identity()
     admin = get_user(jwt_data)
     return admin_schema.dumps(admin)
+
+@app.route("/students/assignments",methods=['GET'])
+@jwt_required
+@student_required
+def Student_assingmnet_details():
+    """Returns the assignmets of the currently logged in  students"""
+
+    jwt_data = get_jwt_identity()
+    data = get_user(jwt_data)
+    result=data.group.assignments
+    return jsonify(assignments_schema.dumps( data.group.assignments))
+    
+@app.route("/admin/assignments/<assingments_id>/submission",methods=['GET'])
+@jwt_required
+@admin_required 
+def admin_assigments(assingments_id):
+
+    """Returns the assignments of the provided id"""
+
+    admin_assigment=Assignment.query.filter_by(id=assingments_id).first()
+    data=admin_assigment.submissions
+    
+    return jsonify({"submission":submissions_schema.dumps(data)})
+    
+
+
+@app.route("/admin/groups",methods=['GET'])
+@jwt_required
+@admin_required   
+def getGRoups():
+
+    """Returns the details of the groups ofcurrently logged in  Admin"""
+    
+    data=Group.query.all()
+    return jsonify({"status":"succes" ,"groups":groups_schema.dumps(data,indent=2)})
+
+@app.route("/admin/groups/<group_id>/assignments", methods=['GET'])
+@jwt_required
+@admin_required  
+def getAssignments(group_id):
+    
+    """Returns the details of the specific group logged in  Admin"""
+
+    data=Group.query.filter_by(id=group_id).first()
+    data_assignment=data.assignments
+    if data==None:
+        return jsonify({"key":"failed"})
+    return jsonify({"status":"succes","group_name":data.name,"assignments":assignments_schema.dumps(data_assignment)})
+
+
+
+
+     
+
+
 
 
 if __name__=="__main__":
