@@ -147,6 +147,35 @@ def getAssignments(group_id):
     return jsonify({"status":"succes","group_name":data.name,"assignments":assignments_schema.dumps(data_assignment)})
 
 
+@app.route("/admin/assignment/edit/<assinment_id>",methods=['POST'])
+@jwt_required
+@admin_required  
+def editAssignment(assinment_id):
+
+    """Edit assingmnet Title and Deadline logged in as Admin"""
+
+    req=request.get_json()
+    data_assingments=Assignment.query.filter_by(id=assinment_id).first()
+    if data_assingments is None:
+        return {"messgae":"NO assignments exists"}
+    data_assingments.title=req['title']
+    data_assingments.deadline=req['deadline']
+    return jsonify({"message":"Edited"})
+
+@app.route("/admin/assignment/delete/<assinment_id>",methods=['POST'])
+@jwt_required
+@admin_required  
+def deleteAssignment(assinment_id):
+
+    """Delete assingmnet  logged in as Admin"""
+
+    data_assingments=Assignment.query.filter_by(id=assinment_id).first()
+    if data_assingments is None:
+        return {"messgae":"NO assignments exists"}
+    db.session.delete(data_assingments)
+    db.session.commit()
+    return jsonify({"message":"Deleted"})    
+
 
 
      
