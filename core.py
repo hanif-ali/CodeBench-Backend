@@ -34,7 +34,9 @@ db.init_app(app)
 # JWT for Authentication
 jwt = JWTManager(app)
 
-
+# --------------------------------------------
+#         Authentication Routes
+# --------------------------------------------
 @app.route("/login", methods=['POST'])
 def login():
 
@@ -78,6 +80,12 @@ def login():
         return jsonify(status="denied", description="Password Invalid")
 
 
+
+
+# --------------------------------------------
+#           Student Routes
+# --------------------------------------------
+
 @app.route("/student/details")
 @jwt_required
 @student_required
@@ -89,6 +97,22 @@ def student_details():
     return student_schema.dumps(student)
 
 
+@app.route("/student/assignments",methods=['GET'])
+@jwt_required
+@student_required
+def student_assingmnet_details():
+    """Returns the assignmets of the currently logged in  students"""
+
+    jwt_data = get_jwt_identity()
+    data = get_user(jwt_data)
+    result=data.group.assignments
+    return assignments_schema.dumps(data.group.assignments)
+    
+
+# --------------------------------------------
+#           Admin Routes
+# --------------------------------------------
+
 @app.route("/admin/details")
 @jwt_required
 @admin_required
@@ -99,17 +123,6 @@ def admin_details():
     admin = get_user(jwt_data)
     return admin_schema.dumps(admin)
 
-@app.route("/students/assignments",methods=['GET'])
-@jwt_required
-@student_required
-def Student_assingmnet_details():
-    """Returns the assignmets of the currently logged in  students"""
-
-    jwt_data = get_jwt_identity()
-    data = get_user(jwt_data)
-    result=data.group.assignments
-    return jsonify(assignments_schema.dumps( data.group.assignments))
-    
 @app.route("/admin/assignments/<assingments_id>/submission",methods=['GET'])
 @jwt_required
 @admin_required 
@@ -142,7 +155,7 @@ def get_groups():
 @jwt_required
 @admin_required  
 def get_assignments(group_id):
-    """Returns the assignment of the group specified by group_id"""
+    """Returns the assignments of the group specified by group_id"""
 
     # Get the Administrator Object
     admin_data = get_user(get_jwt_identity())
@@ -159,18 +172,6 @@ def get_assignments(group_id):
     return jsonify(assignments_schema.dump(group_data.assignments))
 
 
-@app.route("/admin/assignment/edit/<assinment_id>",methods=['POST'])
-@jwt_required
-@admin_required  
-def edit_assignment(assignment_id):
-
-    req=request.get_json()
-    data_assingments=Assignment.query.filter_by(id=assinment_id).first()
-    if data_assingments is None:
-        return {"messgae":"NO assignments exists"}
-    data_assingments.title=req['title']
-    data_assingments.deadline=req['deadline']
-    return jsonify({"message":"Edited"})
 
 @app.route("/admin/assignment/delete/<assignment_id>",methods=['POST'])
 @jwt_required
@@ -180,8 +181,6 @@ def delete_assignment(assignment_id):
 
     jwt_data = get_jwt_identity();
     admin = get_user(jwt_data)
-
-
 
     assignment_data = Assignment.query.filter_by(id=assignment_id).first()
 
@@ -203,9 +202,18 @@ def delete_assignment(assignment_id):
                     "message":"Deleted"})    
 
 
+@app.route("/admin/assignment/edit/<assinment_id>",methods=['POST'])
+@jwt_required
+@admin_required  
+def edit_assignment(assignment_id):
 
-     
-
+    req=request.get_json()
+    data_assingments=Assignment.query.filter_by(id=assinment_id).first()
+    if data_assingments is None:
+        return {"messgae":"NO assignments exists"}
+    data_assingments.title=req['title']
+    data_assingments.deadline=req['deadline']
+    return jsonify({"message":"Edited"})
 
 
 
