@@ -1,6 +1,8 @@
 from flask import Blueprint
-from flask_marshmallow import Marshmallow
-from marshmallow import fields,Schema
+from flask_marshmallow import Marshmallow 
+from marshmallow import fields, Schema, pre_dump
+from models import Administrator, Assignment
+
 serializers_bp = Blueprint("serializers_bp", __name__)
 
 ma = Marshmallow(serializers_bp)
@@ -24,11 +26,23 @@ admins_schema = AdminSchema(many=True)
 
 
 class AssignmetSchema(ma.Schema):
-    class Meta:
-            #Fields toexpose
-            fields=("title","deadline","creation","id")
+    __model__ = Assignment
+
+    id = fields.Int()
+    title = fields.Str()
+    deadline = fields.DateTime()
+    creation_time = fields.DateTime()
+    total_submissions = fields.Int();
+
+    @pre_dump
+    def add_total_count(self, in_data, **kwargs):
+        submissions_count = len(in_data.submissions)
+        setattr(in_data, "total_submissions", submissions_count)
+        return in_data
+
 assisngment_schema=AssignmetSchema()
 assignments_schema=AssignmetSchema(many=True)
+
 
 class GroupSchema(ma.Schema):
     class Meta:
@@ -36,6 +50,7 @@ class GroupSchema(ma.Schema):
         fields=("id","name")
 group_schema=GroupSchema()
 groups_schema=GroupSchema(many=True)  
+
 
 class SubmissionSchema(ma.Schema):
     class Meta:

@@ -78,7 +78,7 @@ class Group(db.Model):
 
     # Foreign Key Relationships
     administrator_id = db.Column(db.Integer, db.ForeignKey('administrators.id'))
-    administrator = db.relationship("Administrator", backref="groups")
+    administrator = db.relationship("Administrator", backref=db.backref("groups", uselist=True))
 
     def __init__(self, name, administrator):
         self.name = name 
@@ -118,6 +118,23 @@ class Submission(db.Model):
     assignment_id = db.Column(db.Integer, db.ForeignKey("assignments.id"))
     assignment = db.relationship("Assignment", backref="submissions")
 
+
     def __init__(self, student, assignment):
         self.student = student
+        self.assignment = assignment
+
+
+class TestCase(db.Model):
+    __tablename__ = "test_cases"
+
+    id = db.Column(db.Integer, primary_key=True, nullable=True)
+    expected_input = db.Column(db.String, default="")
+    expected_output = db.Column(db.String)
+
+    assignment_id = db.Column(db.Integer, db.ForeignKey("assignments.id"))
+    assignment = db.relationship("Assignment", backref="test_cases")
+
+    def __init__(self, assignment, exp_input, exp_output):
+        self.expected_input = exp_input
+        self.expected_output = exp_output
         self.assignment = assignment

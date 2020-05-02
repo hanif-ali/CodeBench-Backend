@@ -11,6 +11,7 @@ from flask_jwt_extended import (
 )
 
 from serializers import serializers_bp, student_schema, students_schema, admin_schema, admins_schema,assisngment_schema,assignments_schema,group_schema,groups_schema,submissions_schema,submission_schema,SubmissionSchema
+
 # Helper Function
 from utils import get_user, admin_required, student_required
 from test_routes import bp as test_routes_bp
@@ -126,33 +127,42 @@ def admin_assigments(assingments_id):
 @app.route("/admin/groups",methods=['GET'])
 @jwt_required
 @admin_required   
-def getGRoups():
+def get_groups():
 
     """Returns the details of the groups ofcurrently logged in  Admin"""
     
-    data=Group.query.all()
-    return jsonify({"status":"succes" ,"groups":groups_schema.dumps(data,indent=2)})
+    # Retrieve the admin object
+    admin = get_user(get_jwt_identity())
+    groups_data = admin.groups
+
+    return groups_schema.dumps(groups_data);
+
 
 @app.route("/admin/groups/<group_id>/assignments", methods=['GET'])
 @jwt_required
 @admin_required  
-def getAssignments(group_id):
-    
-    """Returns the details of the specific group logged in  Admin"""
+def get_assignments(group_id):
+    """Returns the assignment of the group specified by group_id"""
 
-    data=Group.query.filter_by(id=group_id).first()
-    data_assignment=data.assignments
-    if data==None:
-        return jsonify({"key":"failed"})
-    return jsonify({"status":"succes","group_name":data.name,"assignments":assignments_schema.dumps(data_assignment)})
+    # Get the Administrator Object
+    admin_data = get_user(get_jwt_identity())
+
+    # Get the group data
+    group_data = Group.query.filter_by(id=group_id).first()
+    if group_data is None:
+        return jsonify(status="error", message="No such Group")
+
+    # Check if admin owns that group
+    if group_data.administrator != admin_data:
+        return jsonify(status="error", message="Access Denied")
+
+    return jsonify(assignments_schema.dump(group_data.assignments))
 
 
 @app.route("/admin/assignment/edit/<assinment_id>",methods=['POST'])
 @jwt_required
 @admin_required  
-def editAssignment(assinment_id):
-
-    """Edit assingmnet Title and Deadline logged in as Admin"""
+def edit_assignment(assignment_id):
 
     req=request.get_json()
     data_assingments=Assignment.query.filter_by(id=assinment_id).first()
@@ -162,19 +172,35 @@ def editAssignment(assinment_id):
     data_assingments.deadline=req['deadline']
     return jsonify({"message":"Edited"})
 
-@app.route("/admin/assignment/delete/<assinment_id>",methods=['POST'])
+@app.route("/admin/assignment/delete/<assignment_id>",methods=['POST'])
 @jwt_required
 @admin_required  
-def deleteAssignment(assinment_id):
+def delete_assignment(assignment_id):
+    """Delete The Assignment specified by assignment_id"""
 
-    """Delete assingmnet  logged in as Admin"""
+    jwt_data = get_jwt_identity();
+    admin = get_user(jwt_data)
 
-    data_assingments=Assignment.query.filter_by(id=assinment_id).first()
-    if data_assingments is None:
-        return {"messgae":"NO assignments exists"}
+
+
+    assignment_data = Assignment.query.filter_by(id=assignment_id).first()
+
+    # If no such assignment
+    if not assignment_data:
+        return {"status": "error", 
+                "messgae":"Assignment Not Found"}
+
+    # Check if the user is Admin of the Group
+    if assignment.group.admin != admin:
+        return {
+            "status": "error",
+            "message": "Access Denied"
+        }
+
     db.session.delete(data_assingments)
     db.session.commit()
-    return jsonify({"message":"Deleted"})    
+    return jsonify({"status": "succes",
+                    "message":"Deleted"})    
 
 
 
