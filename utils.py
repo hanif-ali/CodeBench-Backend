@@ -19,8 +19,6 @@ def get_user(jwt_data):
     return user
 
 
-
-
 def admin_required(fn):
     @wraps(fn)
     def wrapper(*args, **kwargs):

@@ -27,15 +27,16 @@ admin_schema = AdminSchema()
 admins_schema = AdminSchema(many=True)
 
 
-class AssignmetSchema(ma.Schema):
+class AssignmentSchema(ma.Schema):
     __model__ = Assignment
 
     id = fields.Int()
     title = fields.Str()
     deadline = fields.DateTime()
     creation_time = fields.DateTime()
-    total_submissions = fields.Int();
-    submission = fields.Bool();
+    total_submissions = fields.Int()
+    submission = fields.Bool()
+    total_test_cases = fields.Int()
 
     @pre_dump
     def add_total_count_or_submission(self, in_data, **kwargs):
@@ -57,8 +58,14 @@ class AssignmetSchema(ma.Schema):
 
         return in_data
 
-assisngment_schema=AssignmetSchema()
-assignments_schema=AssignmetSchema(many=True)
+    @pre_dump
+    def add_number_of_test_cases(self, in_data, **kwargs):
+        test_cases = in_data.test_cases
+        setattr(in_data, "total_test_cases", len(test_cases))
+        return in_data
+
+assignment_schema=AssignmentSchema()
+assignments_schema=AssignmentSchema(many=True)
 
 
 class GroupSchema(ma.Schema):
@@ -70,11 +77,15 @@ groups_schema=GroupSchema(many=True)
 
 
 class SubmissionSchema(ma.Schema):
-    class Meta:
-            fields=("id","submission_time","student")
-            
-    student =fields.Nested(StudentSchema,only=("first_name","last_name"))    
-        
-        
-submission_schema=SubmissionSchema()
-submissions_schema=SubmissionSchema(many=True) 
+    __model__ = Assignment
+
+    id = fields.Int()
+    student =fields.Nested(StudentSchema())
+    assignment = fields.Nested(AssignmentSchema())
+    submission_time = fields.DateTime()
+    test_cases_passed = fields.Int()
+    total_test_cases = fields.Int()
+
+
+submission_schema=SubmissionSchema(exclude=('student.id','student.email',))
+submissions_schema=SubmissionSchema(exclude=('student.id','student.email',),many=True) 

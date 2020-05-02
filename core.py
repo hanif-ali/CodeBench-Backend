@@ -1,6 +1,8 @@
 """Main code containing the starting point of the application along
 with all the essential views"""
 
+import os
+
 from flask import Flask, jsonify, request
 from models import db, Student, Administrator, Group, Assignment, Submission
 
@@ -10,7 +12,10 @@ from flask_jwt_extended import (
     get_jwt_identity
 )
 
-from serializers import serializers_bp, student_schema, students_schema, admin_schema, admins_schema,assisngment_schema,assignments_schema,group_schema,groups_schema,submissions_schema,submission_schema,SubmissionSchema
+from serializers import serializers_bp, student_schema, students_schema, \
+                        admin_schema, admins_schema,assignment_schema, \
+                        assignments_schema,group_schema,groups_schema, \
+                        submissions_schema,submission_schema
 
 # Helper Function
 from utils import get_user, admin_required, student_required
@@ -100,14 +105,24 @@ def student_details():
 @app.route("/student/assignments",methods=['GET'])
 @jwt_required
 @student_required
-def student_assingmnet_details():
-    """Returns the assignmets of the currently logged in  students"""
+def get_student_assignments():
+    """Returns the assignmets of the currently logged in student"""
 
     jwt_data = get_jwt_identity()
-    data = get_user(jwt_data)
-    result=data.group.assignments
-    return assignments_schema.dumps(data.group.assignments)
+    student_data = get_user(jwt_data)
+    result = student_data.group.assignments
+    return assignments_schema.dumps(result)
     
+
+@app.route("/student/submissions",methods=['GET'])
+@jwt_required
+@student_required
+def get_student_submissions():
+    """Returns the submissions of the currently logged in student"""
+
+    student_data = get_user(get_jwt_identity())
+    student_submissions = student_data.submissions
+    return submissions_schema.dumps(student_submissions)
 
 # --------------------------------------------
 #           Admin Routes
@@ -123,19 +138,6 @@ def admin_details():
     admin = get_user(jwt_data)
     return admin_schema.dumps(admin)
 
-@app.route("/admin/assignments/<assingments_id>/submission",methods=['GET'])
-@jwt_required
-@admin_required 
-def admin_assigments(assingments_id):
-
-    """Returns the assignments of the provided id"""
-
-    admin_assigment=Assignment.query.filter_by(id=assingments_id).first()
-    data=admin_assigment.submissions
-    
-    return jsonify({"submission":submissions_schema.dumps(data)})
-    
-
 
 @app.route("/admin/groups",methods=['GET'])
 @jwt_required
@@ -148,7 +150,7 @@ def get_groups():
     admin = get_user(get_jwt_identity())
     groups_data = admin.groups
 
-    return groups_schema.dumps(groups_data);
+    return jsonify(groups_schema.dump(groups_data))
 
 
 @app.route("/admin/groups/<group_id>/assignments", methods=['GET'])
@@ -171,6 +173,37 @@ def get_assignments(group_id):
 
     return jsonify(assignments_schema.dump(group_data.assignments))
 
+
+@app.route("/admin/assignments/<assignment_id>", methods=['GET'])
+@jwt_required
+@admin_required  
+def get_assignment(assignment_id):
+    """Returns the assignments of the group specified by group_id"""
+
+    # Get the Administrator Object
+    admin_data = get_user(get_jwt_identity())
+
+    # Get the Assignment data
+    assignment_data = Assignment.query.filter_by(id=assignment_id).first()
+    if assignment_data is None:
+        return jsonify(status="error", message="No such Assignment")
+
+    # Check if admin owns that group
+    if assignment_data.group.administrator != admin_data:
+        return jsonify(status="error", message="Access Denied")
+
+    return jsonify(assignment_schema.dump(assignment_data))
+
+@app.route("/admin/assignments/<assingment_id>/submissions",methods=['GET'])
+@jwt_required
+@admin_required 
+def admin_assigments(assingments_id):
+    """Returns submissions for the Assignment specified by id"""
+
+    admin_assigment=Assignment.query.filter_by(id=assingments_id).first()
+    data=admin_assigment.submissions
+
+    return jsonify({"submission":submissions_schema.dumps(data)})
 
 
 @app.route("/admin/assignment/delete/<assignment_id>",methods=['POST'])

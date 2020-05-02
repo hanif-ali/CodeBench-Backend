@@ -118,6 +118,7 @@ class Submission(db.Model):
     assignment_id = db.Column(db.Integer, db.ForeignKey("assignments.id"))
     assignment = db.relationship("Assignment", backref="submissions")
 
+    test_cases_passed = db.Column(db.Integer, default=0)
 
     def __init__(self, student, assignment):
         self.student = student
