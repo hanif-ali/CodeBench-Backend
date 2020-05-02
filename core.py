@@ -2,9 +2,11 @@
 with all the essential views"""
 
 import os
+import time 
+from datetime import datetime
 
 from flask import Flask, jsonify, request
-from models import db, Student, Administrator, Group, Assignment, Submission
+from models import db, Student, Administrator, Group, Assignment, Submission, TestCase
 
 # JWT Imports
 from flask_jwt_extended import (
@@ -204,6 +206,44 @@ def admin_assigments(assingments_id):
     data=admin_assigment.submissions
 
     return jsonify({"submission":submissions_schema.dumps(data)})
+
+
+@app.route("/admin/assignments/new",methods=['POST'])
+@jwt_required
+@admin_required 
+def create_assignment():
+    # Get Administrator Data. Needed to verify Group Permission
+    admin_data = get_user(get_jwt_identity())
+
+    # Get Assignment Data
+    assignment_data = request.get_json()
+
+    # Convert the Given ISO DataTime to Python DateTime object
+    py_deadline = datetime(*time.strptime(assignment_data['deadline'] , "%Y-%m-%dT%H:%M")[:6])
+
+    # Find out the Assignment Group selected
+    assignment_group = Group.query.get(assignment_data['group_id'])
+
+    # If do not have right permissions
+    if (assignment_group is None or assignment_group.administrator != admin_data):
+        return jsonify(status="error", message="Access Denied")
+
+    # Create New Assignment
+    new_assignment = Assignment(title=assignment_data['title'], 
+                                group=assignment_group,
+                                deadline = py_deadline)
+
+    # Array used to store test_cases temporarily
+    test_cases = []
+    for test_case in assignment_data['test_cases']:
+        new_test_case = TestCase(assignment=new_assignment, # Link to the Assignment
+                                exp_input=test_case["input"],
+                                exp_output=test_case["output"])
+        test_cases.append(test_case)
+
+    # Save all the changes
+    db.session.commit()
+    return jsonify(status="success", message="Assignment Created")
 
 
 @app.route("/admin/assignment/delete/<assignment_id>",methods=['POST'])
