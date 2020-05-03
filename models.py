@@ -124,7 +124,6 @@ class Submission(db.Model):
         self.student = student
         self.assignment = assignment
 
-
 class TestCase(db.Model):
     __tablename__ = "test_cases"
 

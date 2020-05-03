@@ -36,6 +36,10 @@ app.debug = True  # True only for development
 # Database Configs
 app.config['SQLALCHEMY_DATABASE_URI']='sqlite:///database.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS']=False
+
+# Submissions Directory
+app.config['PROJECT_PATH']=os.path.abspath(os.path.dirname(__name__))
+app.config['SUBMISSIONS_FOLDER']=os.path.join(app.config["PROJECT_PATH"], "submissions")
 db.init_app(app) 
 
 # JWT for Authentication
@@ -125,6 +129,41 @@ def get_student_submissions():
     student_data = get_user(get_jwt_identity())
     student_submissions = student_data.submissions
     return submissions_schema.dumps(student_submissions)
+
+
+@app.route("/student/assignments/<assignment_id>/submit",methods=['POST'])
+@jwt_required
+@student_required
+def make_submission(assignment_id):
+    student_data = get_user(get_jwt_identity())
+    assignment_data = Assignment.query.filter_by(id=assignment_id).first()
+
+    if not assignment_data:
+        return jsonify(status="error", message="Assignment Does not Exist")
+
+    elif assignment_data.group != student_data.group:
+        return jsonify(status="error", message="Access Denied")
+
+    new_submission_object = Submission(student_data, assignment_data)  # Create Submission
+    # We save the object so that we get an id to generate the filename
+    db.session.commit() 
+
+    source_code_object = request.files["source_code"] # From submitted form
+
+    save_directory = app.config["SUBMISSIONS_FOLDER"] # Set above 
+
+    # Create a unique name for the File from the submission ID 
+    filename  = str(new_submission_object.id)+".py"
+    file_path = os.path.join(save_directory, filename)
+
+    source_code_object.save(file_path)
+
+    return ""
+
+
+
+
+
 
 # --------------------------------------------
 #           Admin Routes
