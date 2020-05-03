@@ -11,11 +11,12 @@ A 'Student' can be part of a single 'Group'. Each 'Group' needs to have a single
 
 All Passwords are stored as hashes 
 """
+import os
+import datetime
 
 from flask_sqlalchemy import SQLAlchemy
 # Password hashing functions used in functions in authentication models 
 from werkzeug.security import generate_password_hash,check_password_hash
-import datetime
 
 db=SQLAlchemy()
 
@@ -123,6 +124,15 @@ class Submission(db.Model):
     def __init__(self, student, assignment):
         self.student = student
         self.assignment = assignment
+
+    def get_submission_filename(self):
+        """Utility function to get the Submission File's path associated with the current
+        submissino"""
+
+        root_folder = os.path.abspath(os.path.dirname(__name__))
+        submissions_folder = os.path.join(root_folder, "submissions")
+        filename = os.path.join(submissions_folder, str(self.id)+".py")
+        return filename
 
 class TestCase(db.Model):
     __tablename__ = "test_cases"

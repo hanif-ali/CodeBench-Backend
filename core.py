@@ -21,6 +21,7 @@ from serializers import serializers_bp, student_schema, students_schema, \
 
 # Helper Function
 from utils import get_user, admin_required, student_required
+from utils import run_test
 from test_routes import bp as test_routes_bp
 
 
@@ -150,14 +151,15 @@ def make_submission(assignment_id):
 
     source_code_object = request.files["source_code"] # From submitted form
 
-    save_directory = app.config["SUBMISSIONS_FOLDER"] # Set above 
+    # Make use of a utility function we defined in models.py
+    file_path = new_submission_object.get_submission_filename()
 
-    # Create a unique name for the File from the submission ID 
-    filename  = str(new_submission_object.id)+".py"
-    file_path = os.path.join(save_directory, filename)
-
+    # Save the file
     source_code_object.save(file_path)
+    # Run the actual test of the test cases aganist the file
+    test_cases_passed = run_test(new_submission_object)
 
+    # Not completed. To be done
     return ""
 
 
