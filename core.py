@@ -5,7 +5,7 @@ import os
 import time 
 from datetime import datetime
 
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request,json
 from models import db, Student, Administrator, Group, Assignment, Submission, TestCase
 
 # JWT Imports
@@ -304,32 +304,52 @@ def delete_assignment(assignment_id):
                 "messgae":"Assignment Not Found"}
 
     # Check if the user is Admin of the Group
-    if assignment.group.admin != admin:
+    if assignment_data.group.admin != admin:
         return {
             "status": "error",
             "message": "Access Denied"
         }
 
-    db.session.delete(data_assingments)
+    db.session.delete(assignment_data)
     db.session.commit()
     return jsonify({"status": "succes",
                     "message":"Deleted"})    
 
 
-@app.route("/admin/assignment/edit/<assinment_id>",methods=['POST'])
+@app.route("/admin/assignment/edit/<assignment_id>",methods=['POST'])
 @jwt_required
 @admin_required  
 def edit_assignment(assignment_id):
 
     req=request.get_json()
-    data_assingments=Assignment.query.filter_by(id=assinment_id).first()
+    data_assingments=Assignment.query.filter_by(id=assignment_id).first()
     if data_assingments is None:
         return {"messgae":"NO assignments exists"}
     data_assingments.title=req['title']
     data_assingments.deadline=req['deadline']
     return jsonify({"message":"Edited"})
 
+@app.route('/teacher/submission/<submission_id>',methods=['GET'])
+def submission_details(submission_id):
+    submission_data=Submission.query.filter_by(id=submission_id).first()
+    submission_file=Submission.get_submission_result_path
+    if submission_data is None:
+        return jsonify(status="Failed",message="Doesnot exists")
+    json_file=submission_data.get_submission_filename
+    with open("submission_file" ,"r+") as json_data:
+        data=json.dumps((json_data.read().replace("\n","")).replace("\\",""))
+        test_cases={"student_id":submission_data.student_id,
+                "total_test_cases": len(submission_data.assignment.test_cases),
+                "passed_test_cases": len(submission_data.test_cases_passed)
+                ,"test_cases":data}    
+        
+        
 
+
+
+
+
+    
 
 if __name__=="__main__":
     app.run()

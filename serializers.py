@@ -45,6 +45,7 @@ class AssignmentSchema(ma.Schema):
         # In Admin mode, add total submission count
         if user_type == "admin":
             submissions_count = len(in_data.submissions)
+            
             setattr(in_data, "total_submissions", submissions_count)
 
         # In student mode, add submission status

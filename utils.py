@@ -2,6 +2,7 @@
 from functools import wraps # To create decorators
 import subprocess
 import io
+import json
 
 from flask import jsonify
 from flask_jwt_extended import get_jwt_identity
@@ -48,7 +49,7 @@ def student_required(fn):
             return fn(*args, **kwargs)
     return wrapper
 
-
+#helper function that returns dictionary containing details of the submission 
 def run_test(submission_object):
     #######################
     # NOT COMPLETED YET
@@ -59,17 +60,43 @@ def run_test(submission_object):
     submission_file = submission_object.get_submission_filename()
     test_cases = submission_object.assignment.test_cases
 
+#dictionary to store data of passed cases 
+    test_cases = {}
+    result = {"test_cases": test_cases,
+              "student_id": submission_object.student.id,
+              "test_cases": []
+            }
+   
     for test_case in test_cases:
-        expected_input = test_case.expected_input
-        expected_output = test_case.expected_output
 
-    test_process = subprocess.Popen(['python', submission_file], stdout=subprocess.PIPE,
+        #subprocess to compile the given submitted file and run the test cases on it
+        test_process = subprocess.Popen(['python', submission_file], stdout=subprocess.PIPE,
                                     stdin=subprocess.PIPE, stderr=subprocess.PIPE)
-    test_process.communicate(input="Hahnif\n")[0]
-    test_process.communicate(input="4\n")[0]
-    exit_code = test_process.wait()
-    print(f"Finished with exit code of {exit_code}")
-    print(test_process.stdout.read())
+        #provided test cases from the admin
+        expected_input = test_case.expected_input
+        expected_output = test_case.expected_output   
+
+        #checking of the test cases
+        output=test_process.communicate(input=expected_input.encode())[0]
+        
+
+        #information to be returned 
+        passed = output.decode() == expected_output
+        output = output.decode().strip()
+
+        exit_code = test_process.wait()
+
+        result.test_cases.append({
+            "passed": passed,
+            "expected_input": expected_input,
+            "expected_output": expected_output,
+            "output": output
+        })
+
+    json_file_path = submission_object.get_submission_result_path() # get the pathname from the model
+
+    with open(json_file_path, "w+") as json_file:
+        json_file.write(json.dumps(result)) # Serialize object and write to .json file
 
 
-    return [1, 2]
+    return result    

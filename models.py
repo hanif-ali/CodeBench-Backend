@@ -100,6 +100,8 @@ class Assignment(db.Model):
     group_id = db.Column(db.Integer, db.ForeignKey("groups.id"))
     group = db.relationship("Group", backref="assignments")
 
+    
+
     def __init__(self, title, group, deadline):
         self.title = title
         self.group = group
@@ -127,11 +129,20 @@ class Submission(db.Model):
 
     def get_submission_filename(self):
         """Utility function to get the Submission File's path associated with the current
-        submissino"""
+        submission"""
 
         root_folder = os.path.abspath(os.path.dirname(__name__))
         submissions_folder = os.path.join(root_folder, "submissions")
         filename = os.path.join(submissions_folder, str(self.id)+".py")
+        return filename
+
+    def get_submission_result_path(self):
+        """Utility function to get the Submission Result File's path associated with the current
+        submission"""
+
+        root_folder = os.path.abspath(os.path.dirname(__name__))
+        submissions_folder = os.path.join(root_folder, "submissions")
+        filename = os.path.join(submissions_folder, str(self.id)+".json")
         return filename
 
 class TestCase(db.Model):
@@ -140,6 +151,7 @@ class TestCase(db.Model):
     id = db.Column(db.Integer, primary_key=True, nullable=True)
     expected_input = db.Column(db.String, default="")
     expected_output = db.Column(db.String)
+    
 
     assignment_id = db.Column(db.Integer, db.ForeignKey("assignments.id"))
     assignment = db.relationship("Assignment", backref="test_cases")
