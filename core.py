@@ -331,17 +331,27 @@ def edit_assignment(assignment_id):
 
 @app.route('/teacher/submission/<submission_id>',methods=['GET'])
 def submission_details(submission_id):
+    
     submission_data=Submission.query.filter_by(id=submission_id).first()
-    submission_file=Submission.get_submission_result_path
     if submission_data is None:
         return jsonify(status="Failed",message="Doesnot exists")
-    json_file=submission_data.get_submission_filename
+    #getting the file path of the result from json file    
+    submission_file=Submission.get_submission_result_path()
+
+    #oppening json file
     with open("submission_file" ,"r+") as json_data:
+
+        #dumping and removing the escape sequences
         data=json.dumps((json_data.read().replace("\n","")).replace("\\",""))
+
+        #dictionary to be returned
         test_cases={"student_id":submission_data.student_id,
                 "total_test_cases": len(submission_data.assignment.test_cases),
-                "passed_test_cases": len(submission_data.test_cases_passed)
-                ,"test_cases":data}    
+                "passed_test_cases": submission_data.test_cases_passed
+                ,"test_cases":data} 
+
+                
+        return jsonify({"Responce Format": test_cases}  )         
         
         
 
