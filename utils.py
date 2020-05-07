@@ -69,10 +69,19 @@ def run_test(submission_object):
    
     for test_case in test_cases:
 
-        #subprocess to compile the given submitted file and run the test cases on it
-        test_process = subprocess.Popen(['python', submission_file], stdout=subprocess.PIPE,
+        ##in case file is for python compiler
+        if (submission_file.split("."))[1]=="py":
+            #subprocess to compile the given submitted file and run the test cases on it
+            test_process = subprocess.Popen(['python', submission_file], stdout=subprocess.PIPE,
                                     stdin=subprocess.PIPE, stderr=subprocess.PIPE)
+        else:
+            #in case file is for java compiler
+            test_process =subprocess.Popen(["C:\\Program Files\\Java\\jdk-14.0.1\\bin\\java.exe",submission_file], shell=True,stdout=subprocess.PIPE
+            ,stdin=subprocess.PIPE, stderr=subprocess.PIPE)  
+        
+        
         #provided test cases from the admin
+
         expected_input = test_case.expected_input
         expected_output = test_case.expected_output   
 
