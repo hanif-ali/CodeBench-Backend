@@ -342,7 +342,7 @@ def submission_details(submission_id):
     if submission_data is None:
         return jsonify(status="Failed",message="Doesnot exists")
     #getting the file path of the result from json file    
-    submission_file=Submission.get_submission_result_path()
+    submission_file=submission_data.get_submission_result_path()
 
     #oppening json file
     with open("submission_file" ,"r+") as json_data:
