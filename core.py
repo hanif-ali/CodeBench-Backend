@@ -106,7 +106,7 @@ def student_details():
 
     jwt_data = get_jwt_identity()
     student = get_user(jwt_data)
-    return student_schema.dumps(student)
+    return jsonify(student_schema.dump(student))
 
 
 @app.route("/student/assignments",methods=['GET'])
@@ -118,7 +118,7 @@ def get_student_assignments():
     jwt_data = get_jwt_identity()
     student_data = get_user(jwt_data)
     result = student_data.group.assignments
-    return assignments_schema.dumps(result)
+    return jsonify(assignments_schema.dump(result))
     
 
 @app.route("/student/submissions",methods=['GET'])
@@ -129,7 +129,7 @@ def get_student_submissions():
 
     student_data = get_user(get_jwt_identity())
     student_submissions = student_data.submissions
-    return submissions_schema.dumps(student_submissions)
+    return jsonify(submissions_schema.dump(student_submissions))
 
 
 @app.route("/student/assignments/<assignment_id>/submit",methods=['POST'])
@@ -157,10 +157,16 @@ def make_submission(assignment_id):
     # Save the file
     source_code_object.save(file_path)
     # Run the actual test of the test cases aganist the file
-    test_cases_passed = run_test(new_submission_object)
+    # test_cases_passed = run_test(new_submission_object)
 
     # Not completed. To be done
-    return ""
+    return jsonify({
+        "status": "success",
+        "message": "Submission Made",
+        "submission_id": 33,
+        "test_cases_passed": 0,
+        "total_test_cases": 11
+    })
 
 
 
@@ -179,7 +185,7 @@ def admin_details():
 
     jwt_data = get_jwt_identity()
     admin = get_user(jwt_data)
-    return admin_schema.dumps(admin)
+    return jsonify(admin_schema.dump(admin))
 
 
 @app.route("/admin/groups",methods=['GET'])
@@ -237,16 +243,16 @@ def get_assignment(assignment_id):
 
     return jsonify(assignment_schema.dump(assignment_data))
 
-@app.route("/admin/assignments/<assingment_id>/submissions",methods=['GET'])
+@app.route("/admin/assignments/<assignment_id>/submissions",methods=['GET'])
 @jwt_required
 @admin_required 
-def admin_assigments(assingments_id):
+def admin_assigments(assignment_id):
     """Returns submissions for the Assignment specified by id"""
 
-    admin_assigment=Assignment.query.filter_by(id=assingments_id).first()
+    admin_assigment=Assignment.query.filter_by(id=assignment_id).first()
     data=admin_assigment.submissions
 
-    return jsonify({"submission":submissions_schema.dumps(data)})
+    return jsonify(submissions_schema.dump(data))
 
 
 @app.route("/admin/assignments/new",methods=['POST'])
@@ -310,23 +316,23 @@ def delete_assignment(assignment_id):
             "message": "Access Denied"
         }
 
-    db.session.delete(data_assingments)
+    db.session.delete(data_assignments)
     db.session.commit()
     return jsonify({"status": "succes",
                     "message":"Deleted"})    
 
 
-@app.route("/admin/assignment/edit/<assinment_id>",methods=['POST'])
+@app.route("/admin/assignment/edit/<assignment_id>",methods=['POST'])
 @jwt_required
 @admin_required  
 def edit_assignment(assignment_id):
 
     req=request.get_json()
-    data_assingments=Assignment.query.filter_by(id=assinment_id).first()
-    if data_assingments is None:
+    data_assignments=Assignment.query.filter_by(id=assimnent_id).first()
+    if data_assignments is None:
         return {"messgae":"NO assignments exists"}
-    data_assingments.title=req['title']
-    data_assingments.deadline=req['deadline']
+    data_assignments.title=req['title']
+    data_assignments.deadline=req['deadline']
     return jsonify({"message":"Edited"})
 
 
