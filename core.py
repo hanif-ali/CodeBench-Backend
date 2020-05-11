@@ -156,21 +156,15 @@ def make_submission(assignment_id):
 
     # Save the file
     source_code_object.save(file_path)
-    # Run the actual test of the test cases aganist the file
-    # test_cases_passed = run_test(new_submission_object)
 
-    # Not completed. To be done
-    return jsonify({
-        "status": "success",
-        "message": "Submission Made",
-        "submission_id": 33,
-        "test_cases_passed": 0,
-        "total_test_cases": 11
-    })
+    try:
+        execution_results = run_test(new_submission_object, assignment_data)
+    except:
+        # Revert Database Change
+        source_code_object.delete()
+        raise       # Reraise error
 
-
-
-
+    return jsonify(execution_results)
 
 
 # --------------------------------------------
@@ -340,13 +334,13 @@ def submission_details(submission_id):
     
     submission_data=Submission.query.filter_by(id=submission_id).first()
     if submission_data is None:
-        return jsonify(status="Failed",message="Doesnot exists")
-    #getting the file path of the result from json file    
+        return jsonify(status="Failed",message="Submission Does Not Exist")
+
+    # getting the file path of the result from json file    
     submission_file=submission_data.get_submission_result_path()
 
     #oppening json file
-    with open("submission_file" ,"r+") as json_data:
-
+    with open(submission_file ,"r+") as json_data:
         #dumping and removing the escape sequences
         data=json.dumps((json_data.read().replace("\n","")).replace("\\",""))
 
@@ -356,16 +350,8 @@ def submission_details(submission_id):
                 "passed_test_cases": submission_data.test_cases_passed
                 ,"test_cases":data} 
 
-                
         return jsonify({"Responce Format": test_cases}  )         
-        
-        
 
-
-
-
-
-    
 
 if __name__=="__main__":
     app.run()

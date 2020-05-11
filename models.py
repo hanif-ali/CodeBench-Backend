@@ -154,7 +154,7 @@ class TestCase(db.Model):
     
 
     assignment_id = db.Column(db.Integer, db.ForeignKey("assignments.id"))
-    assignment = db.relationship("Assignment", backref="test_cases")
+    assignment = db.relationship("Assignment", backref=db.backref("test_cases", uselist=True))
 
     def __init__(self, assignment, exp_input, exp_output):
         self.expected_input = exp_input
