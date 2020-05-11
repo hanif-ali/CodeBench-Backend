@@ -5,7 +5,7 @@ import os
 import time 
 from datetime import datetime
 
-from flask import Flask, jsonify, request,json
+from flask import Flask, jsonify, request,json, send_file
 from models import db, Student, Administrator, Group, Assignment, Submission, TestCase
 
 # JWT Imports
@@ -329,29 +329,45 @@ def edit_assignment(assignment_id):
     data_assignments.deadline=req['deadline']
     return jsonify({"message":"Edited"})
 
-@app.route('/teacher/submission/<submission_id>',methods=['GET'])
+
+@jwt_required
+@admin_required
+@app.route('/admin/submissions/<submission_id>',methods=['GET'])
 def submission_details(submission_id):
     
     submission_data=Submission.query.filter_by(id=submission_id).first()
     if submission_data is None:
         return jsonify(status="Failed",message="Submission Does Not Exist")
 
-    # getting the file path of the result from json file    
-    submission_file=submission_data.get_submission_result_path()
+    return jsonify(submission_schema.dump(submission_data))         
 
-    #oppening json file
-    with open(submission_file ,"r+") as json_data:
-        #dumping and removing the escape sequences
-        data=json.dumps((json_data.read().replace("\n","")).replace("\\",""))
 
-        #dictionary to be returned
-        test_cases={"student_id":submission_data.student_id,
-                "total_test_cases": len(submission_data.assignment.test_cases),
-                "passed_test_cases": submission_data.test_cases_passed
-                ,"test_cases":data} 
 
-        return jsonify({"Responce Format": test_cases}  )         
+@jwt_required
+@admin_required
+@app.route('/admin/submissions/<submission_id>/file',methods=['GET'])
+def submission_file(submission_id):
+    
+    submission_data=Submission.query.filter_by(id=submission_id).first()
+    if submission_data is None:
+        return jsonify(status="Failed",message="Submission Does Not Exist")
 
+    submission_file_path = submission_data.get_submission_filename()
+
+    return send_file(submission_file_path)
+
+@jwt_required
+@admin_required
+@app.route('/admin/submissions/<submission_id>/results',methods=['GET'])
+def submission_results(submission_id):
+    
+    submission_data=Submission.query.filter_by(id=submission_id).first()
+    if submission_data is None:
+        return jsonify(status="Failed",message="Submission Does Not Exist")
+
+    submission_results_path = submission_data.get_submission_result_path()
+
+    return send_file(submission_results_path)
 
 if __name__=="__main__":
     app.run()

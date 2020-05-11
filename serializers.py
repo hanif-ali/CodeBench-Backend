@@ -87,11 +87,10 @@ class SubmissionSchema(ma.Schema):
 
     id = fields.Int()
     student =fields.Nested(StudentSchema())
-    assignment = fields.Nested(AssignmentSchema())
     submission_time = fields.DateTime()
     test_cases_passed = fields.Int()
     total_test_cases = fields.Int()
 
 
-submission_schema=SubmissionSchema(exclude=('student.id','student.email','student.group'))
-submissions_schema=SubmissionSchema(exclude=('student.id','student.email','student.group'),many=True) 
+submission_schema=SubmissionSchema(exclude=('student.email','student.group', 'student.first_name', 'student.last_name'))
+submissions_schema=SubmissionSchema(exclude=('student.email','student.group'),many=True) 
