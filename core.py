@@ -160,7 +160,7 @@ def make_submission(assignment_id):
     test_cases_passed = run_test(new_submission_object)
 
     # Not completed. To be done
-    return ""
+    return jsonify({"result":test_cases_passed})
 
 
 
@@ -293,7 +293,7 @@ def create_assignment():
 def delete_assignment(assignment_id):
     """Delete The Assignment specified by assignment_id"""
 
-    jwt_data = get_jwt_identity();
+    jwt_data = get_jwt_identity()
     admin = get_user(jwt_data)
 
     assignment_data = Assignment.query.filter_by(id=assignment_id).first()
