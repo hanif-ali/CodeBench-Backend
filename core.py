@@ -5,7 +5,7 @@ import os
 import time 
 from datetime import datetime
 
-from flask import Flask, jsonify, request,json
+from flask import Flask, jsonify, request,json, send_file
 from models import db, Student, Administrator, Group, Assignment, Submission, TestCase
 
 # JWT Imports
@@ -106,7 +106,7 @@ def student_details():
 
     jwt_data = get_jwt_identity()
     student = get_user(jwt_data)
-    return student_schema.dumps(student)
+    return jsonify(student_schema.dump(student))
 
 
 @app.route("/student/assignments",methods=['GET'])
@@ -118,7 +118,7 @@ def get_student_assignments():
     jwt_data = get_jwt_identity()
     student_data = get_user(jwt_data)
     result = student_data.group.assignments
-    return assignments_schema.dumps(result)
+    return jsonify(assignments_schema.dump(result))
     
 
 @app.route("/student/submissions",methods=['GET'])
@@ -129,7 +129,7 @@ def get_student_submissions():
 
     student_data = get_user(get_jwt_identity())
     student_submissions = student_data.submissions
-    return submissions_schema.dumps(student_submissions)
+    return jsonify(submissions_schema.dump(student_submissions))
 
 
 @app.route("/student/assignments/<assignment_id>/submit",methods=['POST'])
@@ -156,15 +156,15 @@ def make_submission(assignment_id):
 
     # Save the file
     source_code_object.save(file_path)
-    # Run the actual test of the test cases aganist the file
-    test_cases_passed = run_test(new_submission_object)
 
-    # Not completed. To be done
-    return jsonify({"result":test_cases_passed})
+    try:
+        execution_results = run_test(new_submission_object, assignment_data)
+    except:
+        # Revert Database Change
+        source_code_object.delete()
+        raise       # Reraise error
 
-
-
-
+    return jsonify(execution_results)
 
 
 # --------------------------------------------
@@ -179,7 +179,7 @@ def admin_details():
 
     jwt_data = get_jwt_identity()
     admin = get_user(jwt_data)
-    return admin_schema.dumps(admin)
+    return jsonify(admin_schema.dump(admin))
 
 
 @app.route("/admin/groups",methods=['GET'])
@@ -237,16 +237,16 @@ def get_assignment(assignment_id):
 
     return jsonify(assignment_schema.dump(assignment_data))
 
-@app.route("/admin/assignments/<assingment_id>/submissions",methods=['GET'])
+@app.route("/admin/assignments/<assignment_id>/submissions",methods=['GET'])
 @jwt_required
 @admin_required 
-def admin_assigments(assingments_id):
+def admin_assigments(assignment_id):
     """Returns submissions for the Assignment specified by id"""
 
-    admin_assigment=Assignment.query.filter_by(id=assingments_id).first()
+    admin_assigment=Assignment.query.filter_by(id=assignment_id).first()
     data=admin_assigment.submissions
 
-    return jsonify({"submission":submissions_schema.dumps(data)})
+    return jsonify(submissions_schema.dump(data))
 
 
 @app.route("/admin/assignments/new",methods=['POST'])
@@ -325,41 +325,49 @@ def edit_assignment(assignment_id):
     data_assingments=Assignment.query.filter_by(id=assignment_id).first()
     if data_assingments is None:
         return {"messgae":"NO assignments exists"}
-    data_assingments.title=req['title']
-    data_assingments.deadline=req['deadline']
+    data_assignments.title=req['title']
+    data_assignments.deadline=req['deadline']
     return jsonify({"message":"Edited"})
 
-@app.route('/teacher/submission/<submission_id>',methods=['GET'])
+
+@jwt_required
+@admin_required
+@app.route('/admin/submissions/<submission_id>',methods=['GET'])
 def submission_details(submission_id):
     
     submission_data=Submission.query.filter_by(id=submission_id).first()
     if submission_data is None:
-        return jsonify(status="Failed",message="Doesnot exists")
-    #getting the file path of the result from json file    
-    submission_file=Submission.get_submission_result_path()
+        return jsonify(status="Failed",message="Submission Does Not Exist")
 
-    #oppening json file
-    with open("submission_file" ,"r+") as json_data:
-
-        #dumping and removing the escape sequences
-        data=json.dumps((json_data.read().replace("\n","")).replace("\\",""))
-
-        #dictionary to be returned
-        test_cases={"student_id":submission_data.student_id,
-                "total_test_cases": len(submission_data.assignment.test_cases),
-                "passed_test_cases": submission_data.test_cases_passed
-                ,"test_cases":data} 
-
-                
-        return jsonify({"Responce Format": test_cases}  )         
-        
-        
+    return jsonify(submission_schema.dump(submission_data))         
 
 
 
-
-
+@jwt_required
+@admin_required
+@app.route('/admin/submissions/<submission_id>/file',methods=['GET'])
+def submission_file(submission_id):
     
+    submission_data=Submission.query.filter_by(id=submission_id).first()
+    if submission_data is None:
+        return jsonify(status="Failed",message="Submission Does Not Exist")
+
+    submission_file_path = submission_data.get_submission_filename()
+
+    return send_file(submission_file_path)
+
+@jwt_required
+@admin_required
+@app.route('/admin/submissions/<submission_id>/results',methods=['GET'])
+def submission_results(submission_id):
+    
+    submission_data=Submission.query.filter_by(id=submission_id).first()
+    if submission_data is None:
+        return jsonify(status="Failed",message="Submission Does Not Exist")
+
+    submission_results_path = submission_data.get_submission_result_path()
+
+    return send_file(submission_results_path)
 
 if __name__=="__main__":
     app.run()

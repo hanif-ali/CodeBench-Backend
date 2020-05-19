@@ -9,15 +9,15 @@ serializers_bp = Blueprint("serializers_bp", __name__)
 
 ma = Marshmallow(serializers_bp)
 
-class StudentSchema(ma.Schema):
+
+
+
+class GroupSchema(ma.Schema):
     class Meta:
-        # Fields to expose
-        fields = ("first_name", "last_name", "cms_id", "email") # Left group, password
-
-
-student_schema = StudentSchema()
-students_schema = StudentSchema(many=True)
-
+        #Fields toexpose
+        fields=("id","name")
+group_schema=GroupSchema()
+groups_schema=GroupSchema(many=True)  
 
 class AdminSchema(ma.Schema):
     class Meta:
@@ -69,24 +69,28 @@ assignment_schema=AssignmentSchema()
 assignments_schema=AssignmentSchema(many=True)
 
 
-class GroupSchema(ma.Schema):
-    class Meta:
-        #Fields toexpose
-        fields=("id","name")
-group_schema=GroupSchema()
-groups_schema=GroupSchema(many=True)  
+class StudentSchema(ma.Schema):
+    __model__ = Student
+    id = fields.Int()
+    first_name = fields.Str()
+    last_name = fields.Str()
+    cms_id = fields.Int()
+    email = fields.Str()
+    group = fields.Nested(GroupSchema())
 
+
+student_schema = StudentSchema()
+students_schema = StudentSchema(many=True)
 
 class SubmissionSchema(ma.Schema):
     __model__ = Assignment
 
     id = fields.Int()
     student =fields.Nested(StudentSchema())
-    assignment = fields.Nested(AssignmentSchema())
     submission_time = fields.DateTime()
     test_cases_passed = fields.Int()
     total_test_cases = fields.Int()
 
 
-submission_schema=SubmissionSchema(exclude=('student.id','student.email',))
-submissions_schema=SubmissionSchema(exclude=('student.id','student.email',),many=True) 
+submission_schema=SubmissionSchema(exclude=('student.email','student.group', 'student.first_name', 'student.last_name'))
+submissions_schema=SubmissionSchema(exclude=('student.email','student.group'),many=True) 

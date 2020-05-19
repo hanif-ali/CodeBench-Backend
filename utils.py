@@ -50,62 +50,80 @@ def student_required(fn):
     return wrapper
 
 #helper function that returns dictionary containing details of the submission 
-def run_test(submission_object):
-    #######################
-    # NOT COMPLETED YET
-    #######################
+def run_test(submission_object, assignment_object):
 
-    # Halfway through
     submission_id = submission_object.id
     submission_file = submission_object.get_submission_filename()
-    test_cases = submission_object.assignment.test_cases
 
-#dictionary to store data of passed cases 
-    test_cases = {}
+    test_cases = []
     result = {"test_cases": test_cases,
               "student_id": submission_object.student.id,
-              "test_cases": []
+              "test_cases_passed": 0
             }
    
-    for test_case in test_cases:
+    for test_case in assignment_object.test_cases:
 
         ##in case file is for python compiler
-        if (submission_file.split("."))[1]=="py":
+        if (submission_file.split("."))[-1] == "py":
             #subprocess to compile the given submitted file and run the test cases on it
-            test_process = subprocess.Popen(['python', submission_file], stdout=subprocess.PIPE,
-                                    stdin=subprocess.PIPE, stderr=subprocess.PIPE)
+            try:        
+                        test_process = subprocess.Popen(['python', submission_file], stdout=subprocess.PIPE,
+                                                            stdin=subprocess.PIPE, stderr=subprocess.PIPE)
+                        test=subprocess.check_output(['python', submission_file],stderr=subprocess.STDOUT)   
+                        error_output=None                            
+            except subprocess.CalledProcessError as error:
+                       
+                        error_output=error.output.decode().strip()
+                                    
         else:
             #in case file is for java compiler
-            test_process =subprocess.Popen(["C:\\Program Files\\Java\\jdk-14.0.1\\bin\\java.exe",submission_file], shell=True,stdout=subprocess.PIPE
-            ,stdin=subprocess.PIPE, stderr=subprocess.PIPE)  
-        
-        
-        #provided test cases from the admin
+            try:
+                    test_process =subprocess.Popen(["C:\\Program Files\\Java\\jdk-14.0.1\\bin\\java.exe",submission_file], shell=True,stdout=subprocess.PIPE
+                    ,stdin=subprocess.PIPE, stderr=subprocess.PIPE) 
+                    test=subprocess.check_output(['python', submission_file],stderr=subprocess.STDOUT)
+                    error_output=None
+            except subprocess.CalledProcessError as error:
+                       
+                    error_output=error.output.decode().strip()    
 
+        
+        # Provided test cases from the admin
         expected_input = test_case.expected_input
         expected_output = test_case.expected_output   
 
         #checking of the test cases
-        output=test_process.communicate(input=expected_input.encode())[0]
-        
+        if not  error_output :
+            output=test_process.communicate(input=expected_input.encode())[0]
+        else:
+             output=test_process.communicate(input=expected_input.encode())[0].decode().strip()
 
         #information to be returned 
-        passed = output.decode() == expected_output
         output = output.decode().strip()
+        passed = output == expected_output
 
         exit_code = test_process.wait()
 
-        result.test_cases.append({
+        test_cases.append({
             "passed": passed,
             "expected_input": expected_input,
             "expected_output": expected_output,
-            "output": output
+            "output": output,
+            "error": error_output
+            
         })
 
-    json_file_path = submission_object.get_submission_result_path() # get the pathname from the model
+    # Count the number of Test Cases that Passed
+    result["test_cases_passed"] = list(map(lambda a:a["passed"], test_cases)).count(True)
+    # Count number of total test cases
+    result["total_test_cases"] = len(test_cases)
 
+    # Write Results to a JSON File
+    json_file_path = submission_object.get_submission_result_path() # get the pathname from the model
     with open(json_file_path, "w+") as json_file:
         json_file.write(json.dumps(result)) # Serialize object and write to .json file
 
-
-    return result    
+    return {
+        "status": "success",
+        "total_test_cases": result["total_test_cases"],
+        "test_cases_passed": result["test_cases_passed"]
+    }

@@ -13,3 +13,6 @@ env/
 
 # SQLite Database
 *.db
+
+# Submission Files
+submissions/*.py
