@@ -145,14 +145,30 @@ def make_submission(assignment_id):
     elif assignment_data.group != student_data.group:
         return jsonify(status="error", message="Access Denied")
 
+
+    check = Submission.query.filter_by(student_id=student_data.id , assignment_id=assignment_id).first()
+    if  check:
+        os.remove(check.get_submission_result_path())
+        os.remove(check.get_submission_filename())
+        db.session.delete(check)
+        db.session.commit()
+
+
+
     new_submission_object = Submission(student_data, assignment_data)  # Create Submission
+
+
     # We save the object so that we get an id to generate the filename
     db.session.commit() 
+
 
     source_code_object = request.files["source_code"] # From submitted form
 
     # Make use of a utility function we defined in models.py
     file_path = new_submission_object.get_submission_filename()
+
+
+
 
     # Save the file
     source_code_object.save(file_path)
@@ -368,6 +384,7 @@ def submission_results(submission_id):
     submission_results_path = submission_data.get_submission_result_path()
 
     return send_file(submission_results_path)
+
 
 if __name__=="__main__":
     app.run()

@@ -3,6 +3,7 @@ from functools import wraps # To create decorators
 import subprocess
 import io
 import json
+import os
 
 from flask import jsonify
 from flask_jwt_extended import get_jwt_identity
@@ -119,6 +120,8 @@ def run_test(submission_object, assignment_object):
 
     # Write Results to a JSON File
     json_file_path = submission_object.get_submission_result_path() # get the pathname from the model
+   
+
     with open(json_file_path, "w+") as json_file:
         json_file.write(json.dumps(result)) # Serialize object and write to .json file
 
