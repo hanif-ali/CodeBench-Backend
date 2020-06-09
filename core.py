@@ -146,12 +146,7 @@ def make_submission(assignment_id):
         return jsonify(status="error", message="Access Denied")
 
 
-    check = Submission.query.filter_by(student_id=student_data.id , assignment_id=assignment_id).first()
-    if  check:
-        os.remove(check.get_submission_result_path())
-        os.remove(check.get_submission_filename())
-        db.session.delete(check)
-        db.session.commit()
+   
 
 
 
