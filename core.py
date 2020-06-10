@@ -150,6 +150,7 @@ def make_submission(assignment_id):
         # Create Submission
         submission_object = Submission(student_data, assignment_data)
         db.session.add(submission_object)
+        db.session.commit()
     else:
         submission_object.update_for_new_submission()
         db.session.commit()
