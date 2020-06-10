@@ -16,3 +16,4 @@ env/
 
 # Submission Files
 submissions/*.py
+submissions/*.json # Submission Results

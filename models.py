@@ -145,6 +145,9 @@ class Submission(db.Model):
         filename = os.path.join(submissions_folder, str(self.id)+".json")
         return filename
 
+    def update_for_new_submission(self):
+        self.submission_time = datetime.datetime.utcnow()
+
 class TestCase(db.Model):
     __tablename__ = "test_cases"
 

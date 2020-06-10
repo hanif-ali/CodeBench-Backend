@@ -145,36 +145,30 @@ def make_submission(assignment_id):
     elif assignment_data.group != student_data.group:
         return jsonify(status="error", message="Access Denied")
 
-
-   
-
-
-
-    new_submission_object = Submission(student_data, assignment_data)  # Create Submission
-
-
-    # We save the object so that we get an id to generate the filename
-    db.session.commit() 
-
+    submission_object = Submission.query.filter_by(student=student_data).filter_by(assignment=assignment_data).first()
+    if not submission_object: 
+        # Create Submission
+        submission_object = Submission(student_data, assignment_data)
+        db.session.add(submission_object)
+    else:
+        submission_object.update_for_new_submission()
+        db.session.commit()
 
     source_code_object = request.files["source_code"] # From submitted form
 
     # Make use of a utility function we defined in models.py
-    file_path = new_submission_object.get_submission_filename()
-
-
-
+    file_path = submission_object.get_submission_filename()
 
     # Save the file
     source_code_object.save(file_path)
 
     try:
-        execution_results = run_test(new_submission_object, assignment_data)
+        execution_results = run_test(submission_object, assignment_data)
     except:
-        # Revert Database Change
-        source_code_object.delete()
-        raise       # Reraise error
+        return jsonify(status="error", description="Submission Failed")
 
+    submission_object.test_cases_passed = execution_results["test_cases_passed"]
+    db.session.commit()
     return jsonify(execution_results)
 
 
