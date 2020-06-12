@@ -18,6 +18,7 @@ from serializers import serializers_bp, student_schema, students_schema, \
                         admin_schema, admins_schema,assignment_schema, \
                         assignments_schema,group_schema,groups_schema, \
                         submissions_schema,submission_schema
+from serializers import test_caseSchema,test_casesSchema
 
 # Helper Function
 from utils import get_user, admin_required, student_required
@@ -325,24 +326,38 @@ def delete_assignment(assignment_id):
     return jsonify({"status": "succes",
                     "message":"Deleted"})    
 
-
 @app.route("/admin/assignment/edit/<assignment_id>",methods=['POST'])
 @jwt_required
-@admin_required  
+@admin_required
 def edit_assignment(assignment_id):
-
+    
     req=request.get_json()
+    
     data_assingments=Assignment.query.filter_by(id=assignment_id).first()
-    if data_assingments is None:
-        return {"messgae":"NO assignments exists"}
-    data_assignments.title=req['title']
-    data_assignments.deadline=req['deadline']
-    return jsonify({"message":"Edited"})
+    
+    
+    if not data_assingments:
+        return jsonify(status="error",message="Assigment does not exists")
+    #edited the title
+    data_assingments.title=req['title']
+    #edited the time
+    data_assingments.deadline=datetime(*time.strptime(req['deadline'] ,"%Y-%m-%d %H:%M")[:6])
+    #query for test cases
+    test_cases=TestCase.query.filter_by(assignment_id=assignment_id)
+            
+    x=0      
+    for each in test_cases:
+            #edited each test case
+            each.expected_input= req["test_cases"][x].get("expected_input")
+            each.expected_output=req["test_cases"][x].get("expected_output" )
+            x=x+1
+    db.session.commit()
+    return jsonify(status="Success",message="Edited")
 
 
+@app.route('/admin/submissions/<submission_id>',methods=['GET'])
 @jwt_required
 @admin_required
-@app.route('/admin/submissions/<submission_id>',methods=['GET'])
 def submission_details(submission_id):
     
     submission_data=Submission.query.filter_by(id=submission_id).first()
@@ -353,9 +368,10 @@ def submission_details(submission_id):
 
 
 
+
+@app.route('/admin/submissions/<submission_id>/file',methods=['GET'])
 @jwt_required
 @admin_required
-@app.route('/admin/submissions/<submission_id>/file',methods=['GET'])
 def submission_file(submission_id):
     
     submission_data=Submission.query.filter_by(id=submission_id).first()
@@ -366,9 +382,10 @@ def submission_file(submission_id):
 
     return send_file(submission_file_path)
 
+
+@app.route('/admin/submissions/<submission_id>/results',methods=['GET'])
 @jwt_required
 @admin_required
-@app.route('/admin/submissions/<submission_id>/results',methods=['GET'])
 def submission_results(submission_id):
     
     submission_data=Submission.query.filter_by(id=submission_id).first()
@@ -378,6 +395,14 @@ def submission_results(submission_id):
     submission_results_path = submission_data.get_submission_result_path()
 
     return send_file(submission_results_path)
+
+@app.route('/admin/assignment/test_cases/<ass_id>',methods=['GET'])
+@jwt_required
+@admin_required
+def test_Cases(ass_id):
+    
+    ass=Assignment.query.filter_by(id=ass_id).first()
+    return jsonify(test_casesSchema.dump(ass.test_cases))
 
 if __name__=="__main__":
     app.run()

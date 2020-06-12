@@ -94,3 +94,12 @@ class SubmissionSchema(ma.Schema):
 
 submission_schema=SubmissionSchema(exclude=('student.email','student.group', 'student.first_name', 'student.last_name'))
 submissions_schema=SubmissionSchema(exclude=('student.email','student.group'),many=True) 
+
+class TestCaseSchema(ma.Schema):
+    class Meta:
+        fields=("expected_output","expected_input")
+        
+        
+        
+test_caseSchema=TestCaseSchema()
+test_casesSchema=TestCaseSchema(many=True)        

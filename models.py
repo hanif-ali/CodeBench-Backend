@@ -20,6 +20,7 @@ from werkzeug.security import generate_password_hash,check_password_hash
 
 db=SQLAlchemy()
 
+get_current_datetime = lambda: datetime.datetime.now().replace(microsecond=0)
 class Student(db.Model):
     __tablename__ = "students"
 
@@ -93,7 +94,7 @@ class Assignment(db.Model):
     title = db.Column(db.String(50))
     # datetime.datetime.now acts as a callback function called everytime the 
     # object is created
-    creation_time = db.Column(db.DateTime, default=datetime.datetime.now)
+    creation_time = db.Column(db.DateTime, default=get_current_datetime)
     deadline = db.Column(db.DateTime)
 
     # Foreign Key Relationships
@@ -112,7 +113,7 @@ class Submission(db.Model):
     __tablename__ = "submssions"
 
     id = db.Column(db.Integer, primary_key=True, nullable=True)
-    submission_time = db.Column(db.DateTime, default=datetime.datetime.utcnow)
+    submission_time = db.Column(db.DateTime, default=get_current_datetime)
 
     # Foreign Key Relationships
     student_id = db.Column(db.Integer, db.ForeignKey("students.id"))
@@ -146,7 +147,8 @@ class Submission(db.Model):
         
         return filename
     def update_for_new_submission(self):
-        self.submission_time = datetime.datetime.utcnow()
+        self.submission_time = get_current_datetime()
+        
 
 class TestCase(db.Model):
     __tablename__ = "test_cases"
