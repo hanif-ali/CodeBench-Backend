@@ -20,8 +20,6 @@ from werkzeug.security import generate_password_hash,check_password_hash
 
 db=SQLAlchemy()
 
-get_current_datetime = lambda: datetime.datetime.now().replace(microsecond=0)
-
 class Student(db.Model):
     __tablename__ = "students"
 
@@ -95,7 +93,7 @@ class Assignment(db.Model):
     title = db.Column(db.String(50))
     # datetime.datetime.now acts as a callback function called everytime the 
     # object is created
-    creation_time = db.Column(db.DateTime, default=get_current_datetime)
+    creation_time = db.Column(db.DateTime, default=datetime.datetime.now)
     deadline = db.Column(db.DateTime)
 
     # Foreign Key Relationships
@@ -114,7 +112,7 @@ class Submission(db.Model):
     __tablename__ = "submssions"
 
     id = db.Column(db.Integer, primary_key=True, nullable=True)
-    submission_time = db.Column(db.DateTime, default=get_current_datetime)
+    submission_time = db.Column(db.DateTime, default=datetime.datetime.utcnow)
 
     # Foreign Key Relationships
     student_id = db.Column(db.Integer, db.ForeignKey("students.id"))
@@ -145,10 +143,10 @@ class Submission(db.Model):
         root_folder = os.path.abspath(os.path.dirname(__name__))
         submissions_folder = os.path.join(root_folder, "submissions")
         filename = os.path.join(submissions_folder, str(self.id)+".json")
+        
         return filename
-
     def update_for_new_submission(self):
-        self.submission_time = get_current_datetime()
+        self.submission_time = datetime.datetime.utcnow()
 
 class TestCase(db.Model):
     __tablename__ = "test_cases"

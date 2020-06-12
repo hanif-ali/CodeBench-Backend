@@ -144,32 +144,36 @@ def make_submission(assignment_id):
 
     elif assignment_data.group != student_data.group:
         return jsonify(status="error", message="Access Denied")
-
     submission_object = Submission.query.filter_by(student=student_data).filter_by(assignment=assignment_data).first()
     if not submission_object: 
         # Create Submission
-        submission_object = Submission(student_data, assignment_data)
-        db.session.add(submission_object)
+        new_submission_object = Submission(student_data, assignment_data)
+        db.session.add(new_submission_object)
         db.session.commit()
     else:
         submission_object.update_for_new_submission()
+        new_submission_object=submission_object
         db.session.commit()
+
+    #new_submission_object = Submission(student_data, assignment_data)  # Create Submission
+    # We save the object so that we get an id to generate the filename
+    #db.session.commit() 
 
     source_code_object = request.files["source_code"] # From submitted form
 
     # Make use of a utility function we defined in models.py
-    file_path = submission_object.get_submission_filename()
+    file_path = new_submission_object.get_submission_filename()
 
     # Save the file
     source_code_object.save(file_path)
 
     try:
-        execution_results = run_test(submission_object, assignment_data)
+        execution_results = run_test(new_submission_object, assignment_data)
     except:
-        return jsonify(status="error", description="Submission Failed")
+        # Revert Database Change
+        source_code_object.delete()
+        raise       # Reraise error
 
-    submission_object.test_cases_passed = execution_results["test_cases_passed"]
-    db.session.commit()
     return jsonify(execution_results)
 
 
@@ -299,7 +303,7 @@ def create_assignment():
 def delete_assignment(assignment_id):
     """Delete The Assignment specified by assignment_id"""
 
-    jwt_data = get_jwt_identity()
+    jwt_data = get_jwt_identity();
     admin = get_user(jwt_data)
 
     assignment_data = Assignment.query.filter_by(id=assignment_id).first()
@@ -374,7 +378,6 @@ def submission_results(submission_id):
     submission_results_path = submission_data.get_submission_result_path()
 
     return send_file(submission_results_path)
-
 
 if __name__=="__main__":
     app.run()

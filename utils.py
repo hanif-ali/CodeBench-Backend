@@ -3,7 +3,6 @@ from functools import wraps # To create decorators
 import subprocess
 import io
 import json
-import os
 
 from flask import jsonify
 from flask_jwt_extended import get_jwt_identity
@@ -67,36 +66,21 @@ def run_test(submission_object, assignment_object):
         ##in case file is for python compiler
         if (submission_file.split("."))[-1] == "py":
             #subprocess to compile the given submitted file and run the test cases on it
-            try:        
-                        test_process = subprocess.Popen(['python', submission_file], stdout=subprocess.PIPE,
-                                                            stdin=subprocess.PIPE, stderr=subprocess.PIPE)
-                        test=subprocess.check_output(['python', submission_file],stderr=subprocess.STDOUT)   
-                        error_output=None                            
-            except subprocess.CalledProcessError as error:
-                       
-                        error_output=error.output.decode().strip()
-                                    
+            test_process = subprocess.Popen(['python', submission_file], stdout=subprocess.PIPE,
+                                    stdin=subprocess.PIPE, stderr=subprocess.PIPE)
         else:
             #in case file is for java compiler
-            try:
-                    test_process =subprocess.Popen(["C:\\Program Files\\Java\\jdk-14.0.1\\bin\\java.exe",submission_file], shell=True,stdout=subprocess.PIPE
-                    ,stdin=subprocess.PIPE, stderr=subprocess.PIPE) 
-                    test=subprocess.check_output(['python', submission_file],stderr=subprocess.STDOUT)
-                    error_output=None
-            except subprocess.CalledProcessError as error:
-                       
-                    error_output=error.output.decode().strip()    
-
+            test_process =subprocess.Popen(["C:\\Program Files\\Java\\jdk-14.0.1\\bin\\java.exe",submission_file], shell=True,stdout=subprocess.PIPE
+            ,stdin=subprocess.PIPE, stderr=subprocess.PIPE)  
+        
         
         # Provided test cases from the admin
         expected_input = test_case.expected_input
         expected_output = test_case.expected_output   
 
         #checking of the test cases
-        if not  error_output :
-            output=test_process.communicate(input=expected_input.encode())[0]
-        else:
-             output=test_process.communicate(input=expected_input.encode())[0].decode().strip()
+        output=test_process.communicate(input=expected_input.encode())[0]
+        
 
         #information to be returned 
         output = output.decode().strip()
@@ -108,9 +92,7 @@ def run_test(submission_object, assignment_object):
             "passed": passed,
             "expected_input": expected_input,
             "expected_output": expected_output,
-            "output": output,
-            "error": error_output
-            
+            "output": output
         })
 
     # Count the number of Test Cases that Passed
@@ -120,8 +102,6 @@ def run_test(submission_object, assignment_object):
 
     # Write Results to a JSON File
     json_file_path = submission_object.get_submission_result_path() # get the pathname from the model
-   
-
     with open(json_file_path, "w+") as json_file:
         json_file.write(json.dumps(result)) # Serialize object and write to .json file
 
