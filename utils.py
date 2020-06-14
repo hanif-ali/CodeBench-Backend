@@ -77,6 +77,7 @@ def run_test(submission_object, assignment_object):
         # Provided test cases from the admin
         expected_input = test_case.expected_input
         expected_output = test_case.expected_output   
+        visible = test_case.visible
 
         #checking of the test cases
         output=test_process.communicate(input=expected_input.encode())[0]
@@ -92,7 +93,8 @@ def run_test(submission_object, assignment_object):
             "passed": passed,
             "expected_input": expected_input,
             "expected_output": expected_output,
-            "output": output
+            "output": output,
+            "visible": visible
         })
 
     # Count the number of Test Cases that Passed
@@ -105,8 +107,11 @@ def run_test(submission_object, assignment_object):
     with open(json_file_path, "w+") as json_file:
         json_file.write(json.dumps(result)) # Serialize object and write to .json file
 
+    visible_test_cases = list(filter(lambda x: x["visible"], test_cases))
+
     return {
         "status": "success",
         "total_test_cases": result["total_test_cases"],
-        "test_cases_passed": result["test_cases_passed"]
+        "test_cases_passed": result["test_cases_passed"],
+        "visible_test_cases": visible_test_cases
     }

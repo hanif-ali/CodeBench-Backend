@@ -288,12 +288,14 @@ def create_assignment():
                                 group=assignment_group,
                                 deadline = py_deadline)
 
-    # Array used to store test_cases temporarily
+    # List used to store test_cases temporarily
+    # so they are not destructed beforing database commit
     test_cases = []
     for test_case in assignment_data['test_cases']:
         new_test_case = TestCase(assignment=new_assignment, # Link to the Assignment
                                 exp_input=test_case["input"],
-                                exp_output=test_case["output"])
+                                exp_output=test_case["output"],
+                                 visible=test_case["visible"])
         test_cases.append(test_case)
 
     # Save all the changes

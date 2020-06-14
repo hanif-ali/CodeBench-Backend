@@ -156,12 +156,13 @@ class TestCase(db.Model):
     id = db.Column(db.Integer, primary_key=True, nullable=True)
     expected_input = db.Column(db.String, default="")
     expected_output = db.Column(db.String)
-    
+    visible = db.Column(db.Boolean, default=False, nullable=False)
 
     assignment_id = db.Column(db.Integer, db.ForeignKey("assignments.id"))
     assignment = db.relationship("Assignment", backref=db.backref("test_cases", uselist=True))
 
-    def __init__(self, assignment, exp_input, exp_output):
+    def __init__(self, assignment, exp_input, exp_output, visible=False):
         self.expected_input = exp_input
         self.expected_output = exp_output
+        self.visible = visible
         self.assignment = assignment
