@@ -271,7 +271,10 @@ def create_assignment():
     assignment_data = request.get_json()
 
     # Convert the Given ISO DataTime to Python DateTime object
-    py_deadline = datetime(*time.strptime(assignment_data['deadline'] , "%Y-%m-%dT%H:%M")[:6])
+    try:
+        py_deadline = datetime(*time.strptime(assignment_data['deadline'] , "%Y-%m-%dT%H:%M")[:6])
+    except ValueError:
+        return jsonify(status="Error", description="Invalid DateTime")
 
     # Find out the Assignment Group selected
     assignment_group = Group.query.get(assignment_data['group_id'])

@@ -52,9 +52,8 @@ class AssignmentSchema(ma.Schema):
         else:
             user = get_user(get_jwt_identity())
             common_submissions = Submission.query.filter(
-                Submission.student == user and Submission.assignment==in_data
+                (Submission.student == user) & (Submission.assignment==in_data)
             ).all()
-            print(common_submissions)
             setattr(in_data, "submission", len(common_submissions)> 0)
 
         return in_data
