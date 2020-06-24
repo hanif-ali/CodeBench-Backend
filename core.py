@@ -283,10 +283,18 @@ def create_assignment():
     if (assignment_group is None or assignment_group.administrator != admin_data):
         return jsonify(status="error", message="Access Denied")
 
+    linting_percentage = assignment_data.get("linting") or 0
+    time_limit = assignment_data.get("time_limit") or 0
+
+    if (linting_percentage > 100) or (linting_percentage < 0):
+        return jsonify(status="Error", description="Invalid Linting Percentage")
+
     # Create New Assignment
     new_assignment = Assignment(title=assignment_data['title'], 
                                 group=assignment_group,
-                                deadline = py_deadline)
+                                deadline = py_deadline,
+                                linting = linting_percentage,
+                                time_limit = time_limit)
 
     # List used to store test_cases temporarily
     # so they are not destructed beforing database commit

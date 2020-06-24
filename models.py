@@ -101,12 +101,17 @@ class Assignment(db.Model):
     group_id = db.Column(db.Integer, db.ForeignKey("groups.id"))
     group = db.relationship("Group", backref="assignments")
 
-    
+    # Linting
+    linting = db.Column(db.Integer, default=0)
 
-    def __init__(self, title, group, deadline):
+    time_limit = db.Column(db.Float, default=0)
+
+    def __init__(self, title, group, deadline, linting=0, time_limit=0):
         self.title = title
         self.group = group
         self.deadline = deadline
+        self.linting = linting
+        self.time_limit = time_limit
 
 
 class Submission(db.Model):
