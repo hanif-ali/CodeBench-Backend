@@ -63,6 +63,8 @@ def run_test(submission_object, assignment_object):
     submission_id = submission_object.id
     submission_file = submission_object.get_submission_filename()
 
+    time_limit = assignment_object.time_limit
+
     test_cases = []
     result = {
               "test_cases": test_cases,
@@ -88,7 +90,6 @@ def run_test(submission_object, assignment_object):
         expected_input = test_case.expected_input
         expected_output = test_case.expected_output
         visible = test_case.visible
-        time_limit = assignment_object.time_limit
 
         #checking of the test cases
         output=test_process.communicate(input=expected_input.encode())[0]

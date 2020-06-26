@@ -129,6 +129,11 @@ class Submission(db.Model):
 
     test_cases_passed = db.Column(db.Integer, default=0)
 
+    # Grading
+    graded = db.Column(db.Boolean, default=False)
+    grade_percentage = db.Column(db.Integer, default=False)
+
+
     def __init__(self, student, assignment):
         self.student = student
         self.assignment = assignment

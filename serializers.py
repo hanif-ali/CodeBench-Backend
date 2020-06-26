@@ -89,6 +89,8 @@ class SubmissionSchema(ma.Schema):
     submission_time = fields.DateTime()
     test_cases_passed = fields.Int()
     total_test_cases = fields.Int()
+    graded = fields.Bool()
+    grade_percentage = fields.Int()
 
 
 submission_schema=SubmissionSchema(exclude=('student.email','student.group', 'student.first_name', 'student.last_name'))

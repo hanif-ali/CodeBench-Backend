@@ -133,6 +133,24 @@ def get_student_submissions():
     return jsonify(submissions_schema.dump(student_submissions))
 
 
+@app.route("/student/submissions/<submission_id>",methods=['GET'])
+@jwt_required
+@student_required
+def get_student_submission(submission_id):
+    """Returns a single submission of the currently logged in student"""
+
+    student_data = get_user(get_jwt_identity())
+
+    student_submission = Submission.query.filter_by(id=submission_id).first()
+
+    if student_submission is None:
+        return jsonify(status="failed", description="Submission does not exist")
+    if student_submission.student != student_data:
+        return jsonify(status="failed", description="Access Denied")
+
+    return jsonify(submission_schema.dump(student_submission))
+
+
 @app.route("/student/assignments/<assignment_id>/submit",methods=['POST'])
 @jwt_required
 @student_required
@@ -374,13 +392,43 @@ def edit_assignment(assignment_id):
 def submission_details(submission_id):
     
     submission_data=Submission.query.filter_by(id=submission_id).first()
+
     if submission_data is None:
         return jsonify(status="Failed",message="Submission Does Not Exist")
 
     return jsonify(submission_schema.dump(submission_data))         
 
 
+@app.route('/admin/submissions/<submission_id>/grade',methods=['POST'])
+@jwt_required
+@admin_required
+def grade_submission(submission_id):
 
+    admin_data = get_user(get_jwt_identity())
+
+    post_data = request.get_json()
+    try:
+        submission_grade = int(post_data.get("submission_grade"))
+
+    except:
+        return jsonify(status="Failed", description="Invalid Grade")
+
+    if submission_grade is None or (0 > submission_grade or submission_grade > 100):
+        return jsonify(status="Failed", description="Invalid Grade")
+
+    submission_data=Submission.query.filter_by(id=submission_id).first()
+
+    if submission_data is None:
+        return jsonify(status="Failed", description="Submission Does Not Exist")
+
+    if submission_data.assignment.group.administrator != admin_data:
+        return jsonify(status="Failed", description="Access Denied")
+
+    submission_data.graded = True
+    submission_data.grade_percentage = submission_grade
+    db.session.commit()
+
+    return jsonify(status="Success", description="Graded")
 
 @app.route('/admin/submissions/<submission_id>/file',methods=['GET'])
 @jwt_required
