@@ -196,6 +196,26 @@ def make_submission(assignment_id):
     return jsonify(execution_results)
 
 
+@app.route('/student/submissions/<submission_id>/results',methods=['GET'])
+@jwt_required
+@student_required
+def student_submission_results(submission_id):
+    
+    jwt_data = get_jwt_identity()
+    student_data = get_user(jwt_data)
+
+    submission_data=Submission.query.filter_by(id=submission_id).first()
+
+    if submission_data is None:
+        return jsonify(status="Failed",message="Submission Does Not Exist")
+
+    if submission_data.student != student_data or not submission_data.graded:
+        return jsonify(status="Failed", message="Access Denied")
+
+    submission_results_path = submission_data.get_submission_result_path()
+
+    return send_file(submission_results_path)
+
 # --------------------------------------------
 #           Admin Routes
 # --------------------------------------------
