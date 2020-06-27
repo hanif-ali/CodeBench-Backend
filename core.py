@@ -429,6 +429,7 @@ def grade_submission(submission_id):
     post_data = request.get_json()
     try:
         submission_grade = int(post_data.get("submission_grade"))
+        remarks = post_data.get("remarks")
 
     except:
         return jsonify(status="Failed", description="Invalid Grade")
@@ -446,6 +447,7 @@ def grade_submission(submission_id):
 
     submission_data.graded = True
     submission_data.grade_percentage = submission_grade
+    submission_data.remarks = remarks
     db.session.commit()
 
     return jsonify(status="Success", description="Graded")

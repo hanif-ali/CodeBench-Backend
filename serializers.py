@@ -91,6 +91,7 @@ class SubmissionSchema(ma.Schema):
     total_test_cases = fields.Int()
     graded = fields.Bool()
     grade_percentage = fields.Int()
+    remarks = fields.Str()
 
 
 submission_schema=SubmissionSchema(exclude=('student.email','student.group', 'student.first_name', 'student.last_name'))

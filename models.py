@@ -132,7 +132,7 @@ class Submission(db.Model):
     # Grading
     graded = db.Column(db.Boolean, default=False)
     grade_percentage = db.Column(db.Integer, default=False)
-
+    remarks = db.Column(db.String, default="")
 
     def __init__(self, student, assignment):
         self.student = student
